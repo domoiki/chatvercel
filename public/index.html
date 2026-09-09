@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Bot AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+    }
+    .card {
+      width: min(100%, 420px);
+      padding: 40px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    h1 { margin-bottom: 24px; color: #c4c4c8; font-size: 20px; }
+    .number { color: #4ade80; font-size: clamp(52px, 14vw, 64px); font-weight: 700; }
+    .label { margin-top: 8px; color: #9696a1; }
+    .error { margin-top: 16px; color: #fca5a5; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>📊 Statistik Bot AI Telegram</h1>
+    <div id="total" class="number" aria-live="polite">...</div>
+    <div class="label">Total Pesan Diproses</div>
+    <p id="error" class="error" hidden>Statistik belum dapat dimuat. Coba refresh halaman.</p>
+  </main>
+
+  <script>
+    fetch('/api/stats')
+      .then((response) => {
+        if (!response.ok) throw new Error('Stats request failed');
+        return response.json();
+      })
+      .then(({ total }) => {
+        document.getElementById('total').textContent = total;
+      })
+      .catch(() => {
+        document.getElementById('error').hidden = false;
+      });
+  </script>
+</body>
+</html>

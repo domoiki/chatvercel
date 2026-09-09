@@ -1,0 +1,16 @@
+{
+  "name": "telegram-ai-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "echo \"Development server not provided; use Vercel\"",
+    "build": "echo \"Static site build not needed\""
+  },
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
+}
