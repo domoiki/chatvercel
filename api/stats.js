@@ -5,13 +5,21 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
-    // Import library postgres v3 - menggunakan default export
-    const postgres = await import('postgres');
-    // Gunakan sebagai fungsi langsung: postgres(queryString)
-    // atau const { sql } = postgres; jika butuh template tag
-    const result = await postgres('SELECT COUNT(*) as total FROM stats');
+    // Import library pg (PostgreSQL classic driver - stabil & kompatibel Vercel)
+    const { Pool } = await import('pg');
     
+    // Konfigurasi koneksi ke Neon PostgreSQL
+    const pool = new Pool({
+      connectionString: process.env.NEON_CONNECTION_STRING,
+      ssl: { rejectUnauthorized: false }
+    });
+    
+    // Query hitung total stats
+    const result = await pool.query('SELECT COUNT(*) as total FROM stats');
     const total = parseInt(result.rows[0]?.total) || 0;
+    
+    // Tutup koneksi
+    await pool.end();
     
     return res.status(200).json({ total });
   } catch (error) {

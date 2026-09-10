@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "@vercel/kv": "^1.0.1",
-    "postgres": "^3.0.5"
+    "pg": "^8.11.0"
   }
 }
