@@ -5,14 +5,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
-    // Import library postgres (v3+)
+    // Import library postgres v3 - menggunakan default export
     const postgres = await import('postgres');
-    const connectionString = process.env.NEON_CONNECTION_STRING;
-    if (!connectionString) {
-      throw new Error('NEON_CONNECTION_STRING environment variable is not set');
-    }
-    
-    // Gunakan koneksi langsung dengan string query
+    // Gunakan sebagai fungsi langsung: postgres(queryString)
+    // atau const { sql } = postgres; jika butuh template tag
     const result = await postgres('SELECT COUNT(*) as total FROM stats');
     
     const total = parseInt(result.rows[0]?.total) || 0;
