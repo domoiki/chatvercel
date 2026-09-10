@@ -5,17 +5,17 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
-    const { Client } = await import('postgres');
+    // Import library postgres (v3+)
+    const postgres = await import('postgres');
     const connectionString = process.env.NEON_CONNECTION_STRING;
     if (!connectionString) {
       throw new Error('NEON_CONNECTION_STRING environment variable is not set');
     }
-    const db = new Client(connectionString);
-    await db.connect();
     
-    const result = await db.query('SELECT COUNT(*) as total FROM stats');
+    // Gunakan koneksi langsung dengan string query
+    const result = await postgres('SELECT COUNT(*) as total FROM stats');
+    
     const total = parseInt(result.rows[0]?.total) || 0;
-    await db.end();
     
     return res.status(200).json({ total });
   } catch (error) {
