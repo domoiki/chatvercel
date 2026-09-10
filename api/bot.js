@@ -14,9 +14,9 @@ function splitMessage(text, maxLength = TELEGRAM_MESSAGE_LIMIT) {
 }
 
 export default async function handler(req, res) {
-  const webhookSecret = process.env.WEBHOOK_SECRET;
+  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'rahasia-ku-12345-abc';
 
-  if (!webhookSecret || req.query?.secret !== webhookSecret) {
+  if (req.query?.secret !== WEBHOOK_SECRET) {
     return res.status(401).send('Unauthorized');
   }
 
@@ -26,16 +26,16 @@ export default async function handler(req, res) {
   if (!message?.text) return res.status(200).send('OK');
 
   const chatId = message.chat?.id;
-  const telegramToken = process.env.TELEGRAM_TOKEN;
-  const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+  const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-  if (!chatId || !telegramToken || !openRouterApiKey) {
+  if (!chatId || !TELEGRAM_TOKEN || !OPENROUTER_API_KEY) {
     console.error('Missing chat ID or required environment variable.');
     return res.status(200).send('OK');
   }
 
   const sendTelegramMessage = async (text) => {
-    const response = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text }),
@@ -48,11 +48,17 @@ export default async function handler(req, res) {
     for (const chunk of splitMessage(text)) await sendTelegramMessage(chunk);
   };
 
-  let kv;
+  let db;
   try {
-    ({ kv } = await import('@vercel/kv'));
+    const { Client } = await import('postgres');
+    const connectionString = process.env.NEON_CONNECTION_STRING;
+    if (!connectionString) {
+      throw new Error('NEON_CONNECTION_STRING environment variable is not set');
+    }
+    db = new Client(connectionString);
+    await db.connect();
   } catch (error) {
-    console.error('Unable to load Vercel KV:', error);
+    console.error('Unable to connect to Neon PostgreSQL:', error);
     try {
       await sendReply(FALLBACK_REPLY);
     } catch (telegramError) {
@@ -65,7 +71,7 @@ export default async function handler(req, res) {
 
   if (message.text === '/reset') {
     try {
-      await kv.del(historyKey);
+      await db.query('DELETE FROM chat_history WHERE chat_id = $1', [chatId]);
       await sendTelegramMessage('🧹 Memori berhasil direset! Mulai percakapan baru ya.');
     } catch (error) {
       console.error('Reset command failed:', error);
@@ -80,16 +86,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    await kv.incr('total_usage');
-    if (message.from?.id) await kv.incr(`user:${message.from.id}`);
+    await db.query('INSERT INTO stats DEFAULT VALUES'); // Increment total usage
+    if (message.from?.id) await db.query('INSERT INTO user_activity(user_id) VALUES($1)', [message.from.id]);
   } catch (error) {
     console.error('Unable to update usage statistics:', error);
   }
 
   let history = [];
   try {
-    const storedHistory = await kv.get(historyKey);
-    if (Array.isArray(storedHistory)) history = storedHistory;
+    const result = await db.query('SELECT * FROM chat_history WHERE chat_id = $1 ORDER BY timestamp DESC LIMIT 20', [chatId]);
+    history = result.rows.reverse();
   } catch (error) {
     console.error('Unable to load chat history:', error);
   }
@@ -104,7 +110,7 @@ export default async function handler(req, res) {
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${openRouterApiKey}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -133,7 +139,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    await kv.set(historyKey, [...history, { role: 'assistant', content: reply }].slice(-20));
+    await db.query('INSERT INTO chat_history (chat_id, message) VALUES ($1, $2)', [chatId, JSON.stringify({ role: 'assistant', content: reply })]);
   } catch (error) {
     console.error('Unable to save chat history:', error);
   }
