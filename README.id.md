@@ -8,7 +8,7 @@ Bot Telegram yang terhubung ke AI (OpenRouter API) dengan memori percakapan per 
 
 - **Runtime:** Vercel Serverless Functions (Node.js)
 - **API AI:** OpenRouter (model gratis `meta-llama/llama-3.1-8b-instruct:free`)
-- **Database:** Neon PostgreSQL untuk statistik & riwayat chat
+- **Database:** Supabase PostgreSQL untuk statistik & riwayat chat
 - **Frontend:** HTML statis untuk dashboard
 
 ---
@@ -54,15 +54,15 @@ Di Vercel dashboard → "Environment Variables" → Tambah:
 | `TELEGRAM_TOKEN` | `123456:ABC-DEF1234ghIkl-zyx57QW2v1u123ew11` |
 | `OPENROUTER_API_KEY` | `sk-or-v1-...` |
 | `WEBHOOK_SECRET` | `rahasia-ku-12345-abc` *(string acak, pakai ini juga di step 4)* |
-| `NEON_CONNECTION_STRING` | `postgresql://...` *(koneksi database Neon)* |
+| `SUPABASE_CONNECTION_STRING` | `postgresql://...` *(koneksi database Supabase)* |
 
 Klik **Add** → **Deploy**
 
-#### 2.3 Setup Database Neon
-- Buka https://neon.com dan buat akun
+#### 2.3 Setup Database Supabase
+- Buka https://supabase.com dan buat akun
 - Buat project database baru
 - Dapatkan connection string (PostgreSQL)
-- Salin ke environment variable `NEON_CONNECTION_STRING`
+- Salin ke environment variable `SUPABASE_CONNECTION_STRING`
 
 #### 2.4 Redeploy
 Setelah database terhubung, jalankan:
@@ -116,9 +116,9 @@ curl -X POST "https://api.telegram.org/bot$TOKEN/setWebhook?url=$WEBHOOK_URL?sec
 | Gejala | Kemungkinan Penyebab | Solusi |
 |---------|--------------|-----|
 | Bot tidak membalas sama sekali | Webhook tidak pernah trigger (secret/token salah) | Cek `getWebhookInfo`; pastikan URL benar & secret cocok |
-| Error 500 di dashboard Vercel | Environment variable hilang atau database tidak connect | Tambah `TELEGRAM_TOKEN`, `OPENROUTER_API_KEY`, `WEBHOOK_SECRET`, `NEON_CONNECTION_STRING`; redeploy |
+| Error 500 di dashboard Vercel | Environment variable hilang atau database tidak connect | Tambah `TELEGRAM_TOKEN`, `OPENROUTER_API_KEY`, `WEBHOOK_SECRET`, `SUPABASE_CONNECTION_STRING`; redeploy |
 | Bot balas "Maaf, AI sedang bermasalah..." | OpenRouter timeout/rate limit model `:free` | Tunggu sebentar atau ganti model di kode (file `api/bot.js`) |
-| Memori tidak jalan (bot jawab acak) | Database PostgreSQL tidak connect | Pastikan database Neon terhubung di dashboard Vercel |
+| Memori tidak jalan (bot jawab acak) | Database PostgreSQL tidak connect | Pastikan database Supabase terhubung di dashboard Vercel |
 
 ### 6. Kode Sumber & Customize
 
@@ -132,7 +132,7 @@ curl -X POST "https://api.telegram.org/bot$TOKEN/setWebhook?url=$WEBHOOK_URL?sec
 #### 6.2 Statistik (`api/stats.js`)
 - Endpoint publik, CORS diizinkan
 - Hanya menampilkan `total_usage` (jumlah pesan yang diproses)
-- Dikirim ke Neon PostgreSQL table `stats` column `total_usage` (increment tiap pesan)
+- Dikirim ke Supabase PostgreSQL table `stats` column `total_usage` (increment tiap pesan)
 
 #### 6.3 Dashboard (`public/index.html`)
 - Responsif, design modern gelap
@@ -153,8 +153,8 @@ curl -X POST "https://api.telegram.org/bot$TOKEN/setWebhook?url=$WEBHOOK_URL?sec
 - [ ] Token bot Telegram
 - [ ] API Key OpenRouter
 - [ ] Akun Vercel + project
-- [ ] Database Neon buat & connection string
-- [ ] `TELEGRAM_TOKEN`, `OPENROUTER_API_KEY`, `WEBHOOK_SECRET`, `NEON_CONNECTION_STRING` di environment Vercel
+- [ ] Database Supabase buat & connection string
+- [ ] `TELEGRAM_TOKEN`, `OPENROUTER_API_KEY`, `WEBHOOK_SECRET`, `SUPABASE_CONNECTION_STRING` di environment Vercel
 - [ ] Deploy → `npx vercel --prod`
 - [ ] Set webhook dengan `?secret=`
 - [ ] Test chat + reset + dashboard
@@ -165,4 +165,4 @@ Jika semua checklist hijau, bot siap menerima pesan!
 
 **Di buat dengan ❤️ untuk Telegram community**
 
-*Versi 2.0.0*# neon-updated
+*Versi 2.0.0*# supabase-updated

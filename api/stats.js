@@ -8,9 +8,9 @@ export default async function handler(req, res) {
     // Import library pg (PostgreSQL classic driver - stabil & kompatibel Vercel)
     const { Pool } = await import('pg');
     
-    // Konfigurasi koneksi ke Neon PostgreSQL
+    // Konfigurasi koneksi ke Supabase
     const pool = new Pool({
-      connectionString: process.env.NEON_CONNECTION_STRING,
+      connectionString: process.env.SUPABASE_CONNECTION_STRING,
       ssl: { rejectUnauthorized: false }
     });
     

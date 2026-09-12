@@ -50,15 +50,15 @@ export default async function handler(req, res) {
 
   let db;
   try {
-    const { Client } = await import('postgres');
-    const connectionString = process.env.NEON_CONNECTION_STRING;
+    const { Client } = await import('pg');
+    const connectionString = process.env.SUPABASE_CONNECTION_STRING;
     if (!connectionString) {
-      throw new Error('NEON_CONNECTION_STRING environment variable is not set');
+      throw new Error('SUPABASE_CONNECTION_STRING environment variable is not set');
     }
-    db = new Client(connectionString);
+    db = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
     await db.connect();
   } catch (error) {
-    console.error('Unable to connect to Neon PostgreSQL:', error);
+    console.error('Unable to connect to Supabase:', error);
     try {
       await sendReply(FALLBACK_REPLY);
     } catch (telegramError) {
